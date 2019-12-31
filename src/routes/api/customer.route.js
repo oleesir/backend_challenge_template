@@ -6,12 +6,13 @@ import Validator from '../../middleware/validator.middleware';
 
 // These are valid routes but they may contain a bug, please try to define and fix them
 
-const { createCustomerSchema } = Schemas;
-const { create } = CustomerController;
+const { createCustomerSchema, loginCustomerSchema } = Schemas;
+const { create, login } = CustomerController;
+const { validationCheck } = Validator;
 
 const router = Router();
-router.post('/customers', createCustomerSchema, Validator.validationCheck, create);
-router.post('/customers/login', CustomerController.login);
+router.post('/customers', createCustomerSchema, validationCheck, create);
+router.post('/customers/login', loginCustomerSchema, validationCheck, login);
 router.get('/customer', CustomerController.getCustomerProfile);
 router.put('/customer', CustomerController.apply);
 router.put('/customer/address', CustomerController.updateCustomerAddress);

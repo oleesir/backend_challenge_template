@@ -12,10 +12,11 @@
  *  NB: Check the BACKEND CHALLENGE TEMPLATE DOCUMENTATION in the readme of this repository to see our recommended
  *  endpoints, request body/param, and response object for each of these method
  */
+
 import { Customer } from '../database/models';
 import Authorization from '../middleware/Authorization.middleware';
 
-const { hashPassword, generateToken } = Authorization;
+const { hashPassword, generateToken, comparePassword } = Authorization;
 
 /**
  *
@@ -58,6 +59,8 @@ class CustomerController {
       const token = generateToken(payload);
       const data = { token, ...newCustomer.get() };
 
+      newCustomer.password = undefined;
+
       return res.status(201).json({ data, message: 'this works' });
     } catch (err) {
       console.log(err);
@@ -74,9 +77,41 @@ class CustomerController {
    * @returns {json} json object with status, and access token
    * @memberof CustomerController
    */
-  static async login(req, res, next) {
+  static async login(req, res) {
     // implement function to login to user account
-    return res.status(200).json({ message: 'this works' });
+    try {
+      const { email, password } = req.body;
+
+      const findCustomer = await Customer.findOne({
+        where: {
+          email,
+        },
+      });
+      if (!findCustomer) {
+        return res.status(401).json({ status: 401, error: 'Email or password is incorrect' });
+      }
+
+      if (findCustomer) {
+        const foundPassword = comparePassword(password, findCustomer.password);
+
+        if (!foundPassword) {
+          return res.status(401).json({ status: 401, error: 'Email or password is incorrect' });
+        }
+
+        const payload = {
+          email,
+        };
+
+        findCustomer.password = undefined;
+
+        const token = generateToken(payload);
+        const data = { token, ...findCustomer.get() };
+
+        return res.status(200).json({ data, message: 'this works' });
+      }
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   /**

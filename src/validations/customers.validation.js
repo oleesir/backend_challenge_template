@@ -25,4 +25,19 @@ export default {
       .isLength({ min: 8, max: 15 })
       .withMessage('Password should be between 8 to 15 characters'),
   ],
+  loginCustomerSchema: [
+    check('email')
+      .trim()
+      .exists()
+      .withMessage('Email address is required')
+      .isEmail()
+      .withMessage('Enter a valid email address')
+      .customSanitizer(email => email.toLowerCase()),
+    check('password')
+      .trim()
+      .exists()
+      .withMessage('Password is required')
+      .isLength({ min: 8, max: 15 })
+      .withMessage('Password should be between 8 to 15 characters'),
+  ],
 };
