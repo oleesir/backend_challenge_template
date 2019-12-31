@@ -68,7 +68,8 @@ export default class Authorization {
    *
    * @returns {string} hashPassword
    */
-  static comparePassword(password, hash) {
-    return bcrypt.compareSync(password, hash);
+  static async comparePassword(password, hash) {
+    const getPassword = await bcrypt.compareSync(password, hash);
+    return getPassword;
   }
 }
