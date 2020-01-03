@@ -40,4 +40,15 @@ export default {
       .isLength({ min: 8, max: 15 })
       .withMessage('Password should be between 8 to 15 characters'),
   ],
+  getCustomerSchema: [
+    check('id')
+      .isInt()
+      .withMessage('Enter a valid id')
+      .custom(value => {
+        if (value < 1) {
+          throw new Error('Id should not be less than 1');
+        }
+        return true;
+      }),
+  ],
 };

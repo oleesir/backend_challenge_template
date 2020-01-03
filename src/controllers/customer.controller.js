@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /**
  * Customer controller handles all requests that has to do with customer
  * Some methods needs to be implemented from scratch while others may contain one or two bugs
@@ -15,6 +16,7 @@
 
 import { Customer } from '../database/models';
 import Authorization from '../middleware/Authorization.middleware';
+import { customerId } from '../test/fixtures';
 
 const { hashPassword, generateToken, comparePassword } = Authorization;
 
@@ -82,11 +84,8 @@ class CustomerController {
     try {
       const { email, password } = req.body;
 
-      const findCustomer = await Customer.findOne({
-        where: {
-          email,
-        },
-      });
+      const findCustomer = await Customer.findOne({ where: { email } });
+
       if (!findCustomer) {
         return res.status(401).json({ status: 401, error: 'Email or password is incorrect' });
       }
@@ -99,7 +98,8 @@ class CustomerController {
         }
 
         const payload = {
-          email,
+          email: findCustomer.email,
+          id: findCustomer.customer_id,
         };
 
         findCustomer.password = undefined;
@@ -126,14 +126,55 @@ class CustomerController {
    */
   static async getCustomerProfile(req, res, next) {
     // fix the bugs in this code
-    const { customer_id } = req;  // eslint-disable-line
+    // eslint-disable-next-line camelcase
+    const { id: customer_id } = req.params;
+    const { id } = req.decoded;
+    let customer;
     try {
-      const customer = await Customer.findByPk(customer_id);
-      return res.status(400).json({
-        customer,
-      });
+      if (parseInt(customer_id, 10) === id) {
+        customer = await Customer.findByPk(customer_id);
+      } else if (parseInt(customer_id, 10) !== id) {
+        return res
+          .status(403)
+          .json({ status: 403, error: 'You not authorized to perform this action' });
+      }
+
+      const {
+        name,
+        email,
+        credit_card,
+        address_1,
+        address_2,
+        city,
+        region,
+        postal_code,
+        country,
+        shipping_region_id,
+        day_phone,
+        eve_phone,
+        mob_phone,
+      } = customer;
+
+      const data = {
+        customer_id,
+        name,
+        email,
+        credit_card,
+        address_1,
+        address_2,
+        city,
+        region,
+        postal_code,
+        country,
+        shipping_region_id,
+        day_phone,
+        eve_phone,
+        mob_phone,
+      };
+
+      return res.status(200).json({ data, message: 'this works' });
     } catch (error) {
-      return next(error);
+      console.log(error);
     }
   }
 

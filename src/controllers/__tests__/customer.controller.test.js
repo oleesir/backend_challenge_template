@@ -2,6 +2,21 @@
 import '@babel/polyfill';
 import request from 'supertest';
 import app, { server } from '../..';
+import {
+  newCustomer,
+  emptyCustomerFields,
+  existingCustomer,
+  wrongEmailInputField,
+  loginCustomer,
+  emptyLoginCustomerField,
+  wrongNameInputField,
+  wrongEmailField,
+  userToken,
+  customerId,
+  unexistingId,
+  invalidId,
+  idLessThanOne,
+} from '../../test/fixtures';
 
 describe('Customer', () => {
   describe('createCustomer', () => {
@@ -10,11 +25,6 @@ describe('Customer', () => {
       done();
     });
     it('should create a customer', done => {
-      const newCustomer = {
-        name: 'tree',
-        email: 'tree@gmail.com',
-        password: 'qwertyuiop',
-      };
       request(app)
         .post('/customers')
         .send(newCustomer)
@@ -29,11 +39,6 @@ describe('Customer', () => {
         });
     });
     it('should not create a customer with empty fields', done => {
-      const emptyCustomerFields = {
-        name: '',
-        email: '',
-        password: '',
-      };
       request(app)
         .post('/customers')
         .send(emptyCustomerFields)
@@ -51,11 +56,6 @@ describe('Customer', () => {
     });
 
     it('should not create a customer that already exists', done => {
-      const existingCustomer = {
-        name: 'tree',
-        email: 'tree@gmail.com',
-        password: 'qwertyuiop',
-      };
       request(app)
         .post('/customers')
         .send(existingCustomer)
@@ -68,11 +68,6 @@ describe('Customer', () => {
     });
 
     it('should not create a customer with an invalid name field', done => {
-      const wrongNameInputField = {
-        name: 'tre948',
-        email: 'jupiter@gmail.com',
-        password: 'qwertyuiop',
-      };
       request(app)
         .post('/customers')
         .send(wrongNameInputField)
@@ -85,11 +80,6 @@ describe('Customer', () => {
     });
 
     it('should not create a customer with an invalid email field', done => {
-      const wrongEmailInputField = {
-        name: 'tanko',
-        email: 'jupitergmail.com',
-        password: 'qwertyuiop',
-      };
       request(app)
         .post('/customers')
         .send(wrongEmailInputField)
@@ -109,13 +99,9 @@ describe('Customer', () => {
     });
 
     it('should login a customer', done => {
-      const newCustomer = {
-        email: 'tree@gmail.com',
-        password: 'qwertyuiop',
-      };
       request(app)
         .post('/customers/login')
-        .send(newCustomer)
+        .send(loginCustomer)
         .set('Content-Type', 'application/json')
         .end((error, res) => {
           expect(res.status).toEqual(200);
@@ -128,13 +114,9 @@ describe('Customer', () => {
     });
 
     it('should not login a customer with empty fields', done => {
-      const emptyCustomerField = {
-        email: '',
-        password: '',
-      };
       request(app)
         .post('/customers/login')
-        .send(emptyCustomerField)
+        .send(emptyLoginCustomerField)
         .set('Content-Type', 'application/json')
         .end((error, res) => {
           expect(res.status).toEqual(400);
@@ -147,10 +129,6 @@ describe('Customer', () => {
     });
 
     it('should not login a customer with empty fields', done => {
-      const wrongEmailField = {
-        email: 'treegmail.com',
-        password: 'qwertyuiop',
-      };
       request(app)
         .post('/customers/login')
         .send(wrongEmailField)
@@ -162,19 +140,57 @@ describe('Customer', () => {
           done();
         });
     });
+  });
+  describe('Get Customer', () => {
+    afterAll(async done => {
+      server.close();
+      done();
+    });
 
-    it('should not login a customer that does not exist', done => {
-      const wrongEmailField = {
-        email: 'jeff@gmail.com',
-        password: 'qwertyuiop',
-      };
+    it('should get profile owned by an authorized user', done => {
       request(app)
-        .post('/customers/login')
-        .send(wrongEmailField)
-        .set('Content-Type', 'application/json')
+        .get(`/customers/${customerId}`)
+        .set('Authorization', `Bearer ${userToken}`)
         .end((error, res) => {
-          expect(res.status).toEqual(401);
-          expect(res.body.error).toEqual('Email or password is incorrect');
+          expect(res.status).toEqual(200);
+          expect(res.body.data).toHaveProperty('name');
+          expect(res.body.data).toHaveProperty('email');
+          expect(res.body.data).toHaveProperty('customer_id');
+          expect(res.body.data).toHaveProperty('shipping_region_id');
+          done();
+        });
+    });
+
+    it('should not get a profile for an unauthorized user', done => {
+      request(app)
+        .get(`/customers/${unexistingId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .end((error, res) => {
+          expect(res.status).toEqual(403);
+          expect(res.body.error).toEqual('You not authorized to perform this action');
+          done();
+        });
+    });
+
+    it('should not get a profile for an invalid Id', done => {
+      request(app)
+        .get(`/customers/${invalidId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .end((error, res) => {
+          expect(res.status).toEqual(400);
+          expect(res.body.error.id).toEqual('Enter a valid id');
+          done();
+        });
+    });
+
+    it('should not get a profile for an Id less than 1', done => {
+      request(app)
+        .get(`/customers/${idLessThanOne}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .end((error, res) => {
+          console.log(res.body);
+          expect(res.status).toEqual(400);
+          expect(res.body.error.id).toEqual('Id should not be less than 1');
           done();
         });
     });
