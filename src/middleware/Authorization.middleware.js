@@ -33,7 +33,7 @@ export default class Authorization {
         return res.status(401).json({ status: 401, error: 'Invalid token' });
       }
       req.decoded = decoded;
-      next();
+      return next();
     });
   }
 
