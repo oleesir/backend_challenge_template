@@ -16,6 +16,11 @@ import {
   unexistingId,
   invalidId,
   idLessThanOne,
+  updateCustomer,
+  updateCustomerInvalidEmail,
+  updateCustomerInvalidPhoneNumber,
+  updateCustomerWrongPhoneNumber,
+  updateCustomerWrongMobNumber,
 } from '../../test/fixtures';
 
 describe('Customer', () => {
@@ -91,7 +96,6 @@ describe('Customer', () => {
         });
     });
   });
-
   describe('Login Customer', () => {
     afterAll(async done => {
       server.close();
@@ -141,7 +145,7 @@ describe('Customer', () => {
         });
     });
   });
-  describe('Get Customer', () => {
+  describe('GET Customer', () => {
     afterAll(async done => {
       server.close();
       done();
@@ -178,7 +182,7 @@ describe('Customer', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .end((error, res) => {
           expect(res.status).toEqual(400);
-          expect(res.body.error.id).toEqual('Enter a valid id');
+          expect(res.body.error.customer_id).toEqual('Enter a valid id');
           done();
         });
     });
@@ -188,9 +192,109 @@ describe('Customer', () => {
         .get(`/customers/${idLessThanOne}`)
         .set('Authorization', `Bearer ${userToken}`)
         .end((error, res) => {
-          console.log(res.body);
           expect(res.status).toEqual(400);
-          expect(res.body.error.id).toEqual('Id should not be less than 1');
+          expect(res.body.error.customer_id).toEqual('Id should not be less than 1');
+          done();
+        });
+    });
+  });
+  describe('PUT Customer', () => {
+    afterAll(async done => {
+      server.close();
+      done();
+    });
+
+    it('should update profile owned by an authorized user', done => {
+      request(app)
+        .put(`/customers/${customerId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .send(updateCustomer)
+        .end((error, res) => {
+          expect(res.status).toEqual(200);
+          expect(res.body.updatedCustomer).toHaveProperty('name');
+          expect(res.body.updatedCustomer).toHaveProperty('email');
+          expect(res.body.updatedCustomer).toHaveProperty('customer_id');
+          expect(res.body.updatedCustomer).toHaveProperty('day_phone');
+          expect(res.body.updatedCustomer).toHaveProperty('eve_phone');
+          expect(res.body.updatedCustomer).toHaveProperty('mob_phone');
+          done();
+        });
+    });
+
+    it('should update profile owned by an unauthorized user', done => {
+      request(app)
+        .put(`/customers/${unexistingId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .send(updateCustomer)
+        .end((error, res) => {
+          expect(res.status).toEqual(403);
+          expect(res.body.error).toEqual('You not authorized to perform this action');
+          done();
+        });
+    });
+
+    it('should not update profile with invalid email', done => {
+      request(app)
+        .put(`/customers/${unexistingId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .send(updateCustomerInvalidEmail)
+        .end((error, res) => {
+          expect(res.status).toEqual(400);
+          expect(res.body.error.email).toEqual('Enter a valid email address');
+          done();
+        });
+    });
+
+    it('should update profile with invalid phone number', done => {
+      request(app)
+        .put(`/customers/${unexistingId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .send(updateCustomerInvalidPhoneNumber)
+        .end((error, res) => {
+          expect(res.status).toEqual(400);
+          expect(res.body.error.day_phone).toEqual('Phone numbers should contain only numbers');
+          expect(res.body.error.eve_phone).toEqual('Phone numbers should contain only numbers');
+          expect(res.body.error.mob_phone).toEqual('Phone numbers should contain only numbers');
+          done();
+        });
+    });
+
+    it('should update profile with invalid phone number', done => {
+      request(app)
+        .put(`/customers/${unexistingId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .send(updateCustomerWrongPhoneNumber)
+        .end((error, res) => {
+          expect(res.status).toEqual(400);
+          expect(res.body.error.day_phone).toEqual('Enter a valid phone number');
+          expect(res.body.error.eve_phone).toEqual('Enter a valid phone number');
+          expect(res.body.error.mob_phone).toEqual('Enter a valid phone number');
+          done();
+        });
+    });
+
+    it('should update profile with invalid phone number', done => {
+      request(app)
+        .put(`/customers/${unexistingId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .send(updateCustomerWrongPhoneNumber)
+        .end((error, res) => {
+          expect(res.status).toEqual(400);
+          expect(res.body.error.day_phone).toEqual('Enter a valid phone number');
+          expect(res.body.error.eve_phone).toEqual('Enter a valid phone number');
+          expect(res.body.error.mob_phone).toEqual('Enter a valid phone number');
+          done();
+        });
+    });
+
+    it('should update profile with invalid phone number', done => {
+      request(app)
+        .put(`/customers/${unexistingId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .send(updateCustomerWrongMobNumber)
+        .end((error, res) => {
+          expect(res.status).toEqual(400);
+          expect(res.body.error.mob_phone).toEqual('mobile_phone is required');
           done();
         });
     });

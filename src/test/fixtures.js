@@ -47,7 +47,7 @@ const wrongEmailField = {
 };
 
 const userPayload = {
-  id: 1,
+  customer_id: 1,
   email: 'tree@gmail.com',
 };
 
@@ -56,6 +56,43 @@ const customerId = 1;
 const unexistingId = 90;
 const invalidId = 'jwijrne';
 const idLessThanOne = 0;
+
+const updateCustomer = {
+  name: 'jeff',
+  email: 'jeff@gmail.com',
+  day_phone: '+2341234534267',
+  eve_phone: '+2341234534267',
+  mob_phone: '+2341234534267',
+};
+
+const updateCustomerInvalidEmail = {
+  name: 'jeff',
+  email: 'jeffgmail.com',
+  day_phone: '+2341234534267',
+  eve_phone: '+2341234534267',
+  mob_phone: '+2341234534267',
+};
+
+const updateCustomerInvalidPhoneNumber = {
+  name: 'jeff',
+  email: 'jeff@gmail.com',
+  day_phone: '+234123453426d',
+  eve_phone: '+234123453426d',
+  mob_phone: '+234123453426d',
+};
+
+const updateCustomerWrongPhoneNumber = {
+  name: 'jeff',
+  email: 'jeff@gmail.com',
+  day_phone: '+234123453426347685',
+  eve_phone: '+2341234534263455',
+  mob_phone: '+234123453426445323',
+};
+
+const updateCustomerWrongMobNumber = {
+  name: 'jeff',
+  email: 'jeff@gmail.com',
+};
 
 export {
   newCustomer,
@@ -71,4 +108,9 @@ export {
   unexistingId,
   invalidId,
   idLessThanOne,
+  updateCustomer,
+  updateCustomerInvalidEmail,
+  updateCustomerInvalidPhoneNumber,
+  updateCustomerWrongPhoneNumber,
+  updateCustomerWrongMobNumber,
 };

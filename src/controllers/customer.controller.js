@@ -14,11 +14,12 @@
  *  endpoints, request body/param, and response object for each of these method
  */
 
-import { Customer } from '../database/models';
+import { Customer, Sequelize } from '../database/models';
 import Authorization from '../middleware/Authorization.middleware';
-import { customerId } from '../test/fixtures';
 
 const { hashPassword, generateToken, comparePassword } = Authorization;
+
+const { Op } = Sequelize;
 
 /**
  *
@@ -36,7 +37,7 @@ class CustomerController {
    * @returns {json} json object with status, customer data and access token
    * @memberof CustomerController
    */
-  static async create(req, res) {
+  static async create(req, res, next) {
     // Implement the function to create the customer account
     try {
       const { email, password } = req.body;
@@ -64,8 +65,8 @@ class CustomerController {
       newCustomer.password = undefined;
 
       return res.status(201).json({ data, message: 'this works' });
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      return next(error);
     }
   }
 
@@ -79,7 +80,7 @@ class CustomerController {
    * @returns {json} json object with status, and access token
    * @memberof CustomerController
    */
-  static async login(req, res) {
+  static async login(req, res, next) {
     // implement function to login to user account
     try {
       const { email, password } = req.body;
@@ -99,7 +100,7 @@ class CustomerController {
 
         const payload = {
           email: findCustomer.email,
-          id: findCustomer.customer_id,
+          customer_id: findCustomer.customer_id,
         };
 
         findCustomer.password = undefined;
@@ -109,8 +110,8 @@ class CustomerController {
 
         return res.status(200).json({ data, message: 'this works' });
       }
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      return next(error);
     }
   }
 
@@ -127,13 +128,14 @@ class CustomerController {
   static async getCustomerProfile(req, res, next) {
     // fix the bugs in this code
     // eslint-disable-next-line camelcase
-    const { id: customer_id } = req.params;
-    const { id } = req.decoded;
+    const { customer_id } = req.params;
+    // const { customer_id } = req.decoded;
+
     let customer;
     try {
-      if (parseInt(customer_id, 10) === id) {
+      if (parseInt(customer_id, 10) === req.decoded.customer_id) {
         customer = await Customer.findByPk(customer_id);
-      } else if (parseInt(customer_id, 10) !== id) {
+      } else if (parseInt(customer_id, 10) !== req.decoded.customer_id) {
         return res
           .status(403)
           .json({ status: 403, error: 'You not authorized to perform this action' });
@@ -174,7 +176,7 @@ class CustomerController {
 
       return res.status(200).json({ data, message: 'this works' });
     } catch (error) {
-      console.log(error);
+      return next(error);
     }
   }
 
@@ -189,8 +191,53 @@ class CustomerController {
    * @memberof CustomerController
    */
   static async updateCustomerProfile(req, res, next) {
-    // Implement function to update customer profile like name, day_phone, eve_phone and mob_phone
-    return res.status(200).json({ message: 'this works' });
+    const { customer_id } = req.params;
+    const { email, name, day_phone, eve_phone, mob_phone } = req.body;
+
+    let foundCustomer;
+
+    try {
+      if (parseInt(customer_id, 10) === req.decoded.customer_id) {
+        foundCustomer = await Customer.findByPk(customer_id);
+      } else if (parseInt(customer_id, 10) !== req.decoded.customer_id) {
+        return res
+          .status(403)
+          .json({ status: 403, error: 'You not authorized to perform this action' });
+      }
+
+      const anotherUserWithEmail = await Customer.findOne({
+        where: {
+          email,
+          [Op.not]: req.decoded.customer_id,
+        },
+      });
+
+      if (anotherUserWithEmail) {
+        return res.status(409).json({ status: 409, error: 'Email already exists' });
+      }
+
+      const updatedCustomer = await foundCustomer.update(
+        {
+          email: email || foundCustomer.email,
+          name: name || foundCustomer.name,
+          day_phone: day_phone || foundCustomer.day_phone,
+          eve_phone: foundCustomer.eve_phone || eve_phone,
+          mob_phone: foundCustomer.mob_phone || mob_phone,
+        },
+        {
+          where: { customer_id: foundCustomer.customer_id },
+          returning: true,
+        }
+      );
+
+      return res
+        .status(200)
+        .json({ updatedCustomer, message: 'Customer has been updated successfully' });
+
+      // Implement function to update customer profile like name, day_phone, eve_phone and mob_phone
+    } catch (error) {
+      return next(error);
+    }
   }
 
   /**
