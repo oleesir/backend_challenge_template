@@ -176,6 +176,7 @@ class CustomerController {
 
       return res.status(200).json({ data, message: 'this works' });
     } catch (error) {
+      console.log('hey', err);
       return next(error);
     }
   }
@@ -221,14 +222,16 @@ class CustomerController {
           email: email || foundCustomer.email,
           name: name || foundCustomer.name,
           day_phone: day_phone || foundCustomer.day_phone,
-          eve_phone: foundCustomer.eve_phone || eve_phone,
-          mob_phone: foundCustomer.mob_phone || mob_phone,
+          eve_phone: eve_phone || foundCustomer.eve_phone,
+          mob_phone: mob_phone || foundCustomer.mob_phone,
         },
         {
           where: { customer_id: foundCustomer.customer_id },
           returning: true,
         }
       );
+
+      updatedCustomer.password = undefined;
 
       return res
         .status(200)
