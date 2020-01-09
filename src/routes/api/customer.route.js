@@ -11,8 +11,15 @@ const {
   loginCustomerSchema,
   getCustomerSchema,
   updateCustomerProfileSchema,
+  updateCustomerAddressSchema,
 } = Schemas;
-const { create, login, getCustomerProfile, updateCustomerProfile } = CustomerController;
+const {
+  create,
+  login,
+  getCustomerProfile,
+  updateCustomerProfile,
+  updateCustomerAddress,
+} = CustomerController;
 const { validationCheck } = Validator;
 const { verifyToken } = Authorization;
 
@@ -33,7 +40,13 @@ router.put(
   validationCheck,
   updateCustomerProfile
 );
-router.put('/customer/address', CustomerController.updateCustomerAddress);
+router.put(
+  '/customers/address/:customer_id',
+  verifyToken,
+  updateCustomerAddressSchema,
+  validationCheck,
+  updateCustomerAddress
+);
 router.put('/customer/creditCard', CustomerController.updateCreditCard);
 
 export default router;

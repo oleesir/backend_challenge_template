@@ -1,5 +1,9 @@
 import { check } from 'express-validator/check';
+import validator from 'validator';
+import isPostalCode from 'validator/lib/isPostalCode';
+import isAlphanumeric from 'validator/lib/isAlphanumeric';
 import isValidPhoneNumber from '../helpers/validatePhoneNumber';
+import isValidAddress from '../helpers/validateAddress';
 
 export default {
   createCustomerSchema: [
@@ -106,6 +110,60 @@ export default {
       .custom(number => {
         if (!isValidPhoneNumber(number)) {
           throw new Error('Enter a valid phone number');
+        }
+        return true;
+      }),
+  ],
+  updateCustomerAddressSchema: [
+    check('address_1')
+      .trim()
+      .exists()
+      .withMessage('Please enter a valid address')
+      .custom(addy => {
+        if (!isValidAddress(addy)) {
+          throw new Error('Address should not contain these characters @#$%^&*_+');
+        }
+        return true;
+      }),
+    check('address_2')
+      .trim()
+      .exists({ checkFalsy: true })
+      .withMessage('Please enter a valid address')
+      .custom(addy => {
+        if (!isValidAddress(addy)) {
+          throw new Error('Address should not contain these characters @#$%^&*_+');
+        }
+        return true;
+      }),
+    check('city')
+      .trim()
+      .exists()
+      .withMessage('Please enter a city')
+      .isAlpha()
+      .withMessage('name should only contain alphabets'),
+    check('region')
+      .trim()
+      .exists()
+      .withMessage('Region type is required')
+      .isISO31661Alpha2()
+      .withMessage('Enter a valid region'),
+    check('postal_code')
+      .trim()
+      .exists()
+      .withMessage('Please enter a postal_code')
+      .custom((value, { req }) => {
+        if (validator.isPostalCodeLocales.includes(req.body.region)) {
+          return isPostalCode(value, req.body.region);
+        }
+        return isAlphanumeric(value);
+      })
+      .withMessage('Please enter a valid postal code'),
+    check('shipping_region_id')
+      .isInt()
+      .withMessage('Enter a valid id')
+      .custom(value => {
+        if (value < 1) {
+          throw new Error('Id should not be less than 1');
         }
         return true;
       }),

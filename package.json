@@ -39,6 +39,7 @@
     "sequelize-cli": "^5.5.1",
     "stripe": "^6.28.0",
     "uniqid": "^5.2.0",
+    "validator": "^12.1.0",
     "winston": "^3.2.1"
   },
   "devDependencies": {

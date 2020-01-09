@@ -85,28 +85,28 @@ class CustomerController {
     try {
       const { email, password } = req.body;
 
-      const findCustomer = await Customer.findOne({ where: { email } });
+      const foundCustomer = await Customer.findOne({ where: { email } });
 
-      if (!findCustomer) {
+      if (!foundCustomer) {
         return res.status(401).json({ status: 401, error: 'Email or password is incorrect' });
       }
 
-      if (findCustomer) {
-        const foundPassword = comparePassword(password, findCustomer.password);
+      if (foundCustomer) {
+        const foundPassword = comparePassword(password, foundCustomer.password);
 
         if (!foundPassword) {
           return res.status(401).json({ status: 401, error: 'Email or password is incorrect' });
         }
 
         const payload = {
-          email: findCustomer.email,
-          customer_id: findCustomer.customer_id,
+          email: foundCustomer.email,
+          customer_id: foundCustomer.customer_id,
         };
 
-        findCustomer.password = undefined;
+        foundCustomer.password = undefined;
 
         const token = generateToken(payload);
-        const data = { token, ...findCustomer.get() };
+        const data = { token, ...foundCustomer.get() };
 
         return res.status(200).json({ data, message: 'this works' });
       }
@@ -256,7 +256,51 @@ class CustomerController {
   static async updateCustomerAddress(req, res, next) {
     // write code to update customer address info such as address_1, address_2, city, region, postal_code, country
     // and shipping_region_id
-    return res.status(200).json({ message: 'this works' });
+    const { customer_id } = req.params;
+    const { address_1, address_2, city, region, postal_code, shipping_region_id } = req.body;
+
+    let foundCustomer;
+
+    try {
+      if (parseInt(customer_id, 10) === req.decoded.customer_id) {
+        foundCustomer = await Customer.findByPk(customer_id);
+      } else if (parseInt(customer_id, 10) !== req.decoded.customer_id) {
+        return res
+          .status(403)
+          .json({ status: 403, error: 'You not authorized to perform this action' });
+      }
+      const anotherUserWithShippingId = await Customer.findOne({
+        where: {
+          shipping_region_id,
+          [Op.not]: req.decoded.customer_id,
+        },
+      });
+
+      if (anotherUserWithShippingId) {
+        return res.status(409).json({ status: 409, error: 'Shipping Id already exists' });
+      }
+
+      const updatedCustomer = await foundCustomer.update(
+        {
+          address_1: address_1 || foundCustomer.address_1,
+          address_2: address_2 || foundCustomer.address_2,
+          city: city || foundCustomer.city,
+          region: region || foundCustomer.region,
+          postal_code: postal_code || foundCustomer.postal_code,
+          shipping_region_id:
+            parseInt(shipping_region_id, 10) || parseInt(foundCustomer.shipping_region_id, 10),
+        },
+        {
+          where: { customer_id: foundCustomer.customer_id },
+          returning: true,
+        }
+      );
+      updatedCustomer.password = undefined;
+
+      return res.status(200).json({ updatedCustomer, message: 'this works' });
+    } catch (error) {
+      return next(error);
+    }
   }
 
   /**
