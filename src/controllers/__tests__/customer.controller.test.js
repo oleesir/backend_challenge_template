@@ -21,6 +21,7 @@ import {
   updateCustomerInvalidPhoneNumber,
   updateCustomerWrongPhoneNumber,
   updateCustomerWrongMobNumber,
+  updateCustomerWrongAddress,
 } from '../../test/fixtures';
 
 describe('Customer', () => {
@@ -295,6 +296,53 @@ describe('Customer', () => {
         .end((error, res) => {
           expect(res.status).toEqual(400);
           expect(res.body.error.mob_phone).toEqual('mobile_phone is required');
+          done();
+        });
+    });
+
+    it('should update profile owned by an authorized user ', done => {
+      request(app)
+        .put(`/customers/address/${customerId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .send(updateCustomer)
+        .end((error, res) => {
+          expect(res.status).toEqual(200);
+          expect(res.body.updatedCustomer).toHaveProperty('address_1');
+          expect(res.body.updatedCustomer).toHaveProperty('address_2');
+          expect(res.body.updatedCustomer).toHaveProperty('city');
+          expect(res.body.updatedCustomer).toHaveProperty('region');
+          expect(res.body.updatedCustomer).toHaveProperty('postal_code');
+          expect(res.body.updatedCustomer).toHaveProperty('shipping_region_id');
+          done();
+        });
+    });
+
+    it('should not update profile owned by an unauthorized user', done => {
+      request(app)
+        .put(`/customers/address/${unexistingId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .send(updateCustomer)
+        .end((error, res) => {
+          expect(res.status).toEqual(403);
+          expect(res.body.error).toEqual('You not authorized to perform this action');
+          done();
+        });
+    });
+
+    it('should not update a profile with wrong address input ', done => {
+      request(app)
+        .put(`/customers/address/${customerId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .send(updateCustomerWrongAddress)
+        .end((error, res) => {
+          console.log(res.body);
+          expect(res.status).toEqual(400);
+          expect(res.body.error.address_1).toEqual(
+            'Address should not contain these characters @#$%^&*_+'
+          );
+          expect(res.body.error.address_2).toEqual(
+            'Address should not contain these characters @#$%^&*_+'
+          );
           done();
         });
     });

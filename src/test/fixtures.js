@@ -63,6 +63,12 @@ const updateCustomer = {
   day_phone: '+2341234534267',
   eve_phone: '+2341234534267',
   mob_phone: '+2341234534267',
+  address_1: 'home sweet home',
+  address_2: 'am going home',
+  city: 'lagos',
+  region: 'CA',
+  postal_code: 'H2M0A1',
+  shipping_region_id: 2,
 };
 
 const updateCustomerInvalidEmail = {
@@ -94,6 +100,20 @@ const updateCustomerWrongMobNumber = {
   email: 'jeff@gmail.com',
 };
 
+const updateCustomerWrongAddress = {
+  name: 'jeff',
+  email: 'jeff@gmail.com',
+  day_phone: '+2341234534267',
+  eve_phone: '+2341234534267',
+  mob_phone: '+2341234534267',
+  address_1: 'home sweet home *$#@%',
+  address_2: 'am going home *^%%6',
+  city: 'lagos',
+  region: 'CA',
+  postal_code: 'H2M0A1',
+  shipping_region_id: 2,
+};
+
 export {
   newCustomer,
   emptyCustomerFields,
@@ -113,4 +133,5 @@ export {
   updateCustomerInvalidPhoneNumber,
   updateCustomerWrongPhoneNumber,
   updateCustomerWrongMobNumber,
+  updateCustomerWrongAddress,
 };
